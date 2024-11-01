@@ -1,0 +1,40 @@
+|-- WT
+|-- db.sqlite3
+|-- estructura_directorio.txt
+|-- in.py
+|-- indicators.py
+|-- dashboard
+    |-- models.py
+    |-- __init__.py
+    |-- apps.py
+    |-- admin.py
+    |-- tests.py
+    |-- views.py
+|-- static
+    |-- index.html
+|-- manage.py
+|-- venv
+    |-- bin
+        |-- Activate.ps1
+        |-- python3
+        |-- pip3.12
+        |-- python
+        |-- pip3
+        |-- activate.fish
+        |-- sqlformat
+        |-- pip
+        |-- activate
+        |-- normalizer
+        |-- django-admin
+        |-- python3.12
+        |-- activate.csh
+    |-- include
+        |-- python3.12
+    |-- pyvenv.cfg
+|-- list_directory.py
+|-- wt
+    |-- asgi.py
+    |-- __init__.py
+    |-- settings.py
+    |-- urls.py
+    |-- wsgi.py

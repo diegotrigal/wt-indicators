@@ -1,0 +1,17 @@
+# Entorno virtual y archivos de Python
+venv/
+*.pyc
+__pycache__/
+
+# Archivos de configuración de Django y base de datos local
+db.sqlite3
+
+# Configuraciones de IDE (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Archivos de migraciones (opcional)
+*/migrations/
+
+# Archivos estáticos compilados
+staticfiles/
