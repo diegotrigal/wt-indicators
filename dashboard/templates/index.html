@@ -13,23 +13,32 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- CUSTOM STYLES -->
-    <link rel="stylesheet" href="{% static '/css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 
     <!-- GOOGLE FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
 
     <!-- Main Content Wrapper -->
-    <div class="content-wrapper container flex-grow-1 d-flex align-items-center justify-content-center">
-        <!-- Aquí va el contenido principal -->
-        <h1 class="text-center">Contenido Principal del Dashboard</h1>
+    <div class="content-wrapper container flex-grow-1 my-4">
+        <h1 class="text-center mb-4">War Thunder Dashboard</h1>
+
+        <!-- Botones de Pausa y Reanudar -->
+        <div class="text-center mb-3">
+            <button id="pauseButton" class="btn btn-warning mx-2" onclick="pauseRefresh()">Pausar</button>
+            <button id="resumeButton" class="btn btn-success mx-2" onclick="resumeRefresh()" disabled>Reanudar</button>
+        </div>
+
+        <div class="row" id="data-container">
+            <!-- Las tarjetas se generarán dinámicamente aquí -->
+        </div>
     </div>
 
     <!-- Footer -->
@@ -40,6 +49,91 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+
+    <script>
+        // Hacer el contenedor de datos sortable
+        new Sortable(document.getElementById('data-container'), {
+            animation: 150,
+            ghostClass: 'sortable-ghost'
+        });
+
+        let intervalId;  // Variable para guardar el ID del intervalo de actualización
+
+        async function fetchData() {
+            try {
+                const response = await fetch("{% url 'get_data' %}");
+                const data = await response.json();
+
+                const container = document.getElementById('data-container');
+                container.innerHTML = '';  // Limpiar el contenedor
+
+                // Iterar sobre state data
+                for (const [key, value] of Object.entries(data.state)) {
+                    const cardId = `card-${key}`; // ID único para el botón de colapso
+                    container.innerHTML += `
+                        <div class="col-md-2 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>${key}</span>
+                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#${cardId}">
+                                        <i class="bi bi-dash-lg"></i>
+                                    </button>
+                                </div>
+                                <div id="${cardId}" class="collapse show card-body text-center">
+                                    ${value}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Iterar sobre indicators data
+                for (const [key, value] of Object.entries(data.indicators)) {
+                    const cardId = `card-${key}`; // ID único para el botón de colapso
+                    container.innerHTML += `
+                        <div class="col-md-2 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>${key}</span>
+                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#${cardId}">
+                                        <i class="bi bi-dash-lg"></i>
+                                    </button>
+                                </div>
+                                <div id="${cardId}" class="collapse show card-body text-center">
+                                    ${value}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Función para iniciar la actualización automática cada 100 ms
+        function startRefresh() {
+            intervalId = setInterval(fetchData, 100);
+        }
+
+        // Función para pausar la actualización
+        function pauseRefresh() {
+            clearInterval(intervalId);  // Detener el intervalo
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('resumeButton').disabled = false;
+        }
+
+        // Función para reanudar la actualización
+        function resumeRefresh() {
+            startRefresh();  // Reiniciar el intervalo
+            document.getElementById('pauseButton').disabled = false;
+            document.getElementById('resumeButton').disabled = true;
+        }
+
+        // Iniciar la actualización al cargar la página
+        startRefresh();
+    </script>
 </body>
 
 </html>
