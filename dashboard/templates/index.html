@@ -51,12 +51,6 @@
         crossorigin="anonymous"></script>
 
     <script>
-        // Hacer el contenedor de datos sortable
-        new Sortable(document.getElementById('data-container'), {
-            animation: 150,
-            ghostClass: 'sortable-ghost'
-        });
-
         let intervalId;  // Variable para guardar el ID del intervalo de actualización
 
         async function fetchData() {
@@ -106,6 +100,12 @@
                         </div>
                     `;
                 }
+
+                // Inicializar de nuevo SortableJS después de actualizar el contenido
+                new Sortable(container, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost'
+                });
 
             } catch (error) {
                 console.error('Error fetching data:', error);
