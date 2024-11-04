@@ -51,7 +51,28 @@
         crossorigin="anonymous"></script>
 
     <script>
-        let intervalId;  // Variable para guardar el ID del intervalo de actualización
+        let intervalId;
+        let sortable;
+
+        // Función para guardar el orden de las tarjetas en localStorage
+        function saveOrder() {
+            const container = document.getElementById('data-container');
+            const order = Array.from(container.children).map(card => card.id);
+            localStorage.setItem('cardOrder', JSON.stringify(order));
+        }
+
+        // Función para restaurar el orden de las tarjetas desde localStorage
+        function restoreOrder() {
+            const container = document.getElementById('data-container');
+            const order = JSON.parse(localStorage.getItem('cardOrder'));
+
+            if (order) {
+                order.forEach(cardId => {
+                    const card = document.getElementById(cardId);
+                    if (card) container.appendChild(card); // Reordenar el elemento
+                });
+            }
+        }
 
         async function fetchData() {
             try {
@@ -59,80 +80,70 @@
                 const data = await response.json();
 
                 const container = document.getElementById('data-container');
-                container.innerHTML = '';  // Limpiar el contenedor
+                container.innerHTML = ''; // Limpiar el contenedor
 
-                // Iterar sobre state data
-                for (const [key, value] of Object.entries(data.state)) {
+                // Iterar sobre state data y indicators data
+                const allData = { ...data.state, ...data.indicators };
+                for (const [key, value] of Object.entries(allData)) {
                     const cardId = `card-${key}`; // ID único para el botón de colapso
-                    container.innerHTML += `
-                        <div class="col-md-2 mb-3">
-                            <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <span>${key}</span>
-                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#${cardId}">
-                                        <i class="bi bi-dash-lg"></i>
-                                    </button>
-                                </div>
-                                <div id="${cardId}" class="collapse show card-body text-center">
-                                    ${value}
-                                </div>
+                    const cardElement = document.createElement("div");
+                    cardElement.classList.add("col-md-2", "mb-3");
+                    cardElement.id = cardId;
+                    cardElement.innerHTML = `
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>${key}</span>
+                                <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#${cardId}-collapse">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                            </div>
+                            <div id="${cardId}-collapse" class="collapse show card-body text-center">
+                                ${value}
                             </div>
                         </div>
                     `;
+                    container.appendChild(cardElement); // Añadir cada card al contenedor
                 }
 
-                // Iterar sobre indicators data
-                for (const [key, value] of Object.entries(data.indicators)) {
-                    const cardId = `card-${key}`; // ID único para el botón de colapso
-                    container.innerHTML += `
-                        <div class="col-md-2 mb-3">
-                            <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <span>${key}</span>
-                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#${cardId}">
-                                        <i class="bi bi-dash-lg"></i>
-                                    </button>
-                                </div>
-                                <div id="${cardId}" class="collapse show card-body text-center">
-                                    ${value}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
+                // Restaurar el orden guardado de las tarjetas
+                restoreOrder();
 
-                // Inicializar de nuevo SortableJS después de actualizar el contenido
-                new Sortable(container, {
-                    animation: 150,
-                    ghostClass: 'sortable-ghost'
-                });
+                // Inicializar SortableJS solo una vez
+                if (!sortable) {
+                    sortable = new Sortable(container, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        forceFallback: true,
+                        onEnd: saveOrder  // Guardar el orden al finalizar el arrastre
+                    });
+                }
 
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
 
-        // Función para iniciar la actualización automática cada 100 ms
         function startRefresh() {
             intervalId = setInterval(fetchData, 100);
         }
 
-        // Función para pausar la actualización
         function pauseRefresh() {
-            clearInterval(intervalId);  // Detener el intervalo
+            clearInterval(intervalId);
             document.getElementById('pauseButton').disabled = true;
             document.getElementById('resumeButton').disabled = false;
         }
 
-        // Función para reanudar la actualización
         function resumeRefresh() {
-            startRefresh();  // Reiniciar el intervalo
+            startRefresh();
             document.getElementById('pauseButton').disabled = false;
             document.getElementById('resumeButton').disabled = true;
         }
 
-        // Iniciar la actualización al cargar la página
-        startRefresh();
+        // Restaurar el orden inicial al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            startRefresh();
+        });
     </script>
 </body>
 
